@@ -25,9 +25,14 @@ jobs:
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Pull base image to cache
+        run: docker pull mcr.microsoft.com/dotnet/framework/aspnet:4.8.1
       - name: Dockerize and push to ECR
         id: build-image
         env:
+          DOCKER_BUILDKIT: 1
           ECR_REGISTRY: public.ecr.aws
           ECR_REPOSITORY_NAME: myapp
           IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
