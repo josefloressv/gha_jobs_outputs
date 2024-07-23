@@ -13,6 +13,15 @@ jobs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
       - uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}  
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
       - name: Create Docker Image Tag
         id: tag
         shell: bash
@@ -28,7 +37,7 @@ jobs:
       - name: Dockerize and push to ECR
         id: build-image
         env:
-          ECR_REGISTRY: public.ecr.aws
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY_NAME: myapp
           IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
         shell: bash
