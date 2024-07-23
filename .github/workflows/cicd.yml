@@ -1,0 +1,49 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build_and_push:
+    runs-on: windows-latest
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker Image Tag
+        id: tag
+        shell: bash
+        run: echo "image_tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      - name: Run a one-line script
+        shell: bash
+        run: echo Hello, world!
+      - name: Run a multi-line script
+        shell: bash
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+      - name: Dockerize and push to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: public.ecr.aws
+          ECR_REPOSITORY_NAME: myapp
+          IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
+        shell: bash
+        run: |
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_NAME:$IMAGE_TAG"
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
+  deploy_to_inactive:
+    needs: build_and_push
+    name: Deploy to inactive service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check the image from previous step
+        env:
+          IMAGE: ${{ needs.build_and_push.outputs.image }}
+        run: |
+          echo $IMAGE
